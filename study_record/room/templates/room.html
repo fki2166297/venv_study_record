@@ -54,11 +54,10 @@
 
     <script>
         fetch('{% url "room:get_room_member" room.pk %}')
-            .then((response) => {
+            .then(response => {
                 return response.json();
             })
-            .then((data) => {
-                console.log(data);
+            .then(data => {
             });
 
         function getCookie(name) {
