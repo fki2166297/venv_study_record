@@ -14,10 +14,12 @@
     <ul class="list-group mb-5">
         {% if subject_list %}
             {% for subject in subject_list %}
-                <li class="list-group-item hstack gap-3">
+                <li class="list-group-item hstack gap-2">
                     <span class="text-break"><i class="bi bi-circle-fill mx-3" style="color: {{ subject.color }};"></i>{{ subject.name }}</span>
-                    <a class="btn btn-primary ms-auto" href="{% url 'study:subject_update' subject.id %}" role="button">編集</a>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deletionModal" data-id="{{ subject.id }}" data-subject-color="{{ subject.color }}" data-subject="{{ subject.name }}">削除</button>
+                    <a class="btn ms-auto" href="{% url 'study:subject_update' subject.id %}" role="button"><i class="bi bi-pen"></i></a>
+                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#deletionModal" data-id="{{ subject.id }}" data-subject-color="{{ subject.color }}" data-subject="{{ subject.name }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </li>
             {% endfor %}
         {% else %}

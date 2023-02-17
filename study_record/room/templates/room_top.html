@@ -47,9 +47,9 @@
         {% for public_room in public_room_list %}
             <div class="col">
                 <div class="card shadow-sm">
-                    <h6 class="card-header bg-white py-3">
-                        <a class="text-decoration-none text-reset stretched-link" href="{% url 'room:select_subject' public_room.pk %}">{{ public_room.name }}</a>
-                    </h6>
+                    <h5 class="card-header bg-white py-3">
+                        <a href="{% url 'room:select_subject' public_room.pk %}">{{ public_room.name }}</a>
+                    </h5>
                     <div class="card-body z-0">
                         <a class="text-decoration-none hstack gap-2" href="{% url 'study:account_detail' public_room.host.pk %}">
                             {% if public_room.host.icon %}

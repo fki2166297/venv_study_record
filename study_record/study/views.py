@@ -184,12 +184,14 @@ class SubjectCreateView(LoginRequiredMixin, generic.CreateView):
     template_name = 'subject_create.html'
     form_class = SubjectCreateForm
 
+    def get(self, request, **kwargs):
+        request.session['via'] = request.environ.get('HTTP_REFERER')
+        return super().get(request, **kwargs)
+
     def get_success_url(self):
-        via = self.request.GET.get('via')
-        if via == 'studyrecord-create':
-            return reverse_lazy('study:studyrecord_create')
-        else:
-            return reverse_lazy('study:subject')
+        success_url = self.request.session['via']
+        del self.request.session['via']
+        return success_url
 
     def form_valid(self, form):
         subject = form.save(commit=False)
@@ -223,11 +225,13 @@ class SubjectUpdateView(LoginRequiredMixin, generic.UpdateView):
 class SubjectDeleteView(LoginRequiredMixin, generic.View):
     def post(self, request, *args, **kwargs):
         subject = Subject.objects.get(pk=kwargs['pk'])
-        # StudyRecordのsubjectフィールドはSubjectモデルを外部キーに設定しているため、
-        # Subjectのレコードを削除するのではなく、使用不可（is_availavle = False）に設定する
-        subject.is_available = False
-        subject.save()
-
+        if StudyRecord.objects.filter(subject=subject).exists():
+            # StudyRecordのsubjectフィールドはSubjectモデルを外部キーに設定しているため、
+            # Subjectのレコードを削除するのではなく、使用不可（is_availavle = False）に設定する
+            subject.is_available = False
+            subject.save()
+        else:
+            subject.delete()
         messages.success(request, '教科を削除しました。')
         return HttpResponseRedirect(reverse_lazy('study:subject'))
 
