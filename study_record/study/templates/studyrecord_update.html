@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}記録の編集 | StudyRecord{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 720px; margin-bottom: 10rem;">
+    <div class="hstack mb-3">
+        <h4>記録の編集</h4>
+        <button type="button" class="btn btn-secondary ms-auto" data-bs-toggle="modal" data-bs-target="#deletionModal">記録を削除する</button>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.subject.id_for_label }}">教科<span class="text-danger">*</span></label>
+            {% render_field form.subject class='form-select' %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.studied_at.id_for_label }}">日時<span class="text-danger">*</span></label>
+            {% render_field form.studied_at class='form-control js-dateTimePicker' %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.minutes.id_for_label }}">学習時間（分）<span class="text-danger">*</span></label>
+            {% render_field form.minutes class='form-control' min='5' max='1440' step='5' %}
+        </div>
+        <div class="mb-4">
+            <label class="form-label" for="{{ form.publication.id_for_label }}">公開設定<span class="text-danger">*</span></label>
+            {% render_field form.publication class='form-select' %}
+        </div>
+        <button type="submit" class="btn btn-primary">更新</button>
+    </form>
+
+
+    <!-- 記録削除モーダル -->
+    <div class="modal fade" id="deletionModal" tabindex="-1" aria-labelledby="deletionModalLabel">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deletionModalLabel">記録の削除</h1>
+                </div>
+                <div class="modal-body">
+                    <p>この記録を削除しますか？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <form method="post" action="{% url 'study:studyrecord_delete' study_record_pk %}" id="deletionForm">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">削除する</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<!-- Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<!-- Tempus Dominus -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/6.2.4/js/tempus-dominus.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/6.2.4/plugins/customDateFormat.min.js" crossorigin="anonymous"></script>
+
+<script>
+    tempusDominus.extend(window.tempusDominus.plugins.customDateFormat);
+
+    const dateTimePickerEl = document.querySelector('.js-dateTimePicker');
+    new tempusDominus.TempusDominus(dateTimePickerEl, {
+        display: {
+            buttons: {
+                today: true,
+                clear: true,
+            },
+            components: {
+                decades: false,
+            },
+            theme: 'light',
+        },
+        useCurrent: false,
+        localization: {
+            today: '今日',
+            clear: 'クリア',
+            selectMonth: '月を選択',
+            previousMonth: '前月',
+            nextMonth: '次月',
+            selectYear: '年を選択',
+            previousYear: '前年',
+            nextYear: '次年',
+            previousDecade: '前期間',
+            nextDecade: '次期間',
+            incrementHour: '1時間増やす',
+            decrementHour: '1時間減らす',
+            incrementMinute: '1分増やす',
+            decrementMinute: '1分減らす',
+            selectTime: '時刻を選択',
+            selectDate: '日付を選択',
+            locale: 'ja',
+            format: 'yyyy-MM-dd HH:mm',
+        },
+    });
+</script>
+{% endblock %}

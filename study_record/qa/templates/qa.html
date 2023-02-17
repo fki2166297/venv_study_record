@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}Q&ampA | StudyRecord{% endblock %}
+
+{% block active_qa %}active{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="margin-bottom: 10rem;">
+    <div class="row">
+        <div class="col-md-8">
+            <form method="get">
+                <div class="input-group mb-3">
+                    <input type="search" class="form-control" name="query" placeholder="質問を検索">
+                    <button type="submit" class="btn btn-primary"><i class="material-symbols-outlined align-middle">search</i></button>
+                </div>
+            </form>
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if tab == 'all' %}active{% endif %}" {% if tab == 'all' %}aria-current="page"{% endif %} href="?tab=all{% if query %}&query={{ query }}{% endif %}">すべて</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if tab == 'unresolved' %}active{% endif %}" {% if tab == 'unresolved' %}aria-current="page"{% endif %} href="?tab=unresolved{% if query %}&query={{ query }}{% endif %}">未解決</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if tab == 'resolved' %}active{% endif %}" {% if tab == 'resolved' %}aria-current="page"{% endif %} href="?tab=resolved{% if query %}&query={{ query }}{% endif %}">解決済み</a>
+                </li>
+            </ul>
+            <ul class="list-group list-group-flush list-group-border-bottom">
+                <li class="list-group-item">
+                    <div class="row g-1 align-items-center">
+                        <div class="col-auto">
+                            <label for="sort-select" class="col-form-label">表示順</label>
+                        </div>
+                        <div class="col-auto me-2">
+                            <select id="sort-select" class="form-select form-select-sm">
+                                <option value="new" {% if sort == 'new' %}selected{% endif %}>投稿日時の新しい順</option>
+                                <option value="old" {% if sort == 'old' %}selected{% endif %}>投稿日時の古い順</option>
+                            </select>
+                        </div>
+                    </div>
+                </li>
+                {% if question_list %}
+                    {% for question in question_list %}
+                        <li class="list-group-item position-relative">
+                            <div class="d-flex align-item-center">
+                                <div class="d-flex flex-column justify-content-evenly py-2">
+                                    <a class="stretched-link text-decoration-none text-break" href="{% url 'qa:question_detail' question.id %}">{{ question.title|truncatechars:100 }}</a>
+                                    <div class="hstack gap-3 mt-1">
+                                        <small class="text-muted">{{ question.created_at|date:'n/j G:i' }}</small>
+                                        {% if question.is_resolved %}
+                                            <small class="text-muted">解決済み</small>
+                                        {% else %}
+                                            <small class="text-muted">未解決</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="list-group-item text-center py-5">質問がありません。</li>
+                {% endif %}
+            </ul>
+
+            <!-- ページネーション -->
+            {% if is_paginated %}
+                <ul class="pagination justify-content-center" style="margin-top: 3rem;">
+                    <!-- 前ページへのリンク -->
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&query={{ query }}{% endif %}{% if tab %}&tab={{ tab }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">&laquo;</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link">&laquo;</a></li>
+                    {% endif %}
+                    <!-- ページ数表示 -->
+                    {% for page_num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == page_num %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_num }}{% if query %}&query={{ query }}{% endif %}{% if tab %}&tab={{ tab }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    <!-- 次ページへのリンク -->
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&query={{ query }}{% endif %}{% if tab %}&tab={{ tab }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">&raquo;</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link">&raquo;</a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+        </div>
+        <div class="col-md-4 d-none d-md-block mb-3">
+            <div style="position: sticky; top: 5rem;">
+                <a class="btn btn-primary col-12 mb-3" href="{% url 'qa:question_create' %}" role="button">質問する</a>
+            </div>
+        </div>
+    </div>
+    <a class="btn btn-primary rounded-circle d-md-none position-fixed bottom-0 end-0 m-3 d-flex justify-content-center align-items-center" style=" width: 56px; height: 56px;" href="{% url 'qa:question_create' %}" role="button"><div class="material-symbols-outlined">add</div></a>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    function getOptionElement(select, value) {
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === value) return select.options[i];
+        }
+        return null;
+    }
+
+    const sortSelect = document.getElementById('sort-select');
+
+    sortSelect.onchange = () => {
+        const url = new URL(window.location);
+        url.searchParams.delete('sort');
+        url.searchParams.delete('page');
+        url.searchParams.append('sort', sortSelect.value);
+        window.location.href = url.href;
+    }
+</script>
+{% endblock %}

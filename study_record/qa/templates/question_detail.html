@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}質問詳細 | StudyRecord{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 960px; margin-bottom: 10rem;">
+    <!-- 質問 -->
+    <div class="card mb-5">
+        <div class="card-body mx-md-5 my-3">
+
+            <div class="hstack gap-3 mb-3">
+                <a class="text-decoration-none" href="{% url 'study:account_detail' question.user.pk %}">
+                    {% if question.user.icon %}
+                        <img src="/media/{{ question.user.icon }}" alt="{{ question.user.username }}" width="28" height="28" class="rounded-circle">
+                    {% else %}
+                        <img src="{% static 'images/default_icon.png' %}" alt="{{ user.username }}" width="28" height="28" class="rounded-circle">
+                    {% endif %}
+                    <span>{{ question.user.username }}</span>
+                </a>
+                <small class="text-muted">{{ question.created_at|date:'Y/n/j G:i' }}</small>
+                {% if question.user.pk == user.pk %}
+                    {% if not question.supplement or answer_count == 0 %}
+                        <div class="dropdown ms-auto">
+                            <a href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if not question.supplement %}
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'qa:add_supplement' question.pk %}" role="button">補足説明の追加</a>
+                                    </li>
+                                {% endif %}
+                                <!-- 回答数が0の場合のみ削除できる -->
+                                {% if answer_count == 0 %}
+                                    <li>
+                                        <button class="dropdown-item" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deletionModal">削除</button>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <h4>{{ question.title }}</h4>
+
+            <p class="card-text mb-3">{{ question.text|linebreaksbr }}</p>
+
+            {% if question.image %}
+                <div class="mb-3">
+                    <a role="button" data-bs-toggle="modal" data-bs-target="#imageModal" data-image="{{ question.image }}">
+                        <img src="/media/{{ question.image }}" class="rounded mx-auto d-block" style="object-fit: cover;" width="320" height="240"/>
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if question.supplement %}
+                <div class="card card-body bg-light mb-3">
+                    <strong>補足</strong>
+                    <span>{{ question.supplement }}</span>
+                </div>
+            {% endif %}
+
+            <div class="hstack">
+                <!-- ユーザーが未回答の場合 -->
+                {% if not is_user_answered %}
+                    {% if question.user.pk != user.pk %}
+                        <a class="btn btn-primary" href="{% url 'qa:answer_create' question.pk %}" role="button">回答する</a>
+                    {% elif not question.is_resolved %}
+                        <a class="btn btn-primary" href="{% url 'qa:self_resolution' question.pk %}" role="button">自己解決</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 回答 -->
+    <h4>{{ answer_count }}件の回答</h4>
+    <ul class="list-group list-group-flush list-group-border-top-bottom">
+        {% if answer_list %}
+            {% for answer in answer_list %}
+                <li class="list-group-item px-md-5 py-4">
+                    <div class="hstack gap-3 mb-3">
+                        <a class="text-decoration-none" href="{% url 'study:account_detail' answer.user.pk %}">
+                            {% if answer.user.icon %}
+                                <img src="/media/{{ answer.user.icon }}" alt="{{ answer.user.username }}" width="28" height="28" class="rounded-circle">
+                            {% else %}
+                                <img src="{% static 'images/default_icon.png' %}" alt="{{ answer.user.username }}" width="28" height="28" class="rounded-circle">
+                            {% endif %}
+                            <span>{{ answer.user.username }}</span>
+                        </a>
+                        <small class="text-muted">{{ answer.created_at|date:'Y/n/j G:i' }}</small>
+                    </div>
+                    {% if answer.is_best %}
+                        <div class="badge text-bg-success fs-6 mb-3">ベストアンサー</div>
+                    {% elif answer.self_resolution %}
+                        <div class="badge text-bg-success fs-6 mb-3">自己解決</div>
+                    {% elif question.user.pk == user.pk and not question.is_resolved %}
+                        <a class="d-block mb-3" href="{% url 'qa:set_best_answer' question.pk answer.pk %}">ベストアンサーにする</a>
+                    {% endif %}
+
+                    <p class="text-break mb-4">{{ answer.text|linebreaksbr }}</p>
+                    {% if answer.image %}
+                        <div class="col-md-7 mx-auto mb-3">
+                            <a role="button" data-bs-toggle="modal" data-bs-target="#imageModal" data-image="{{ answer.image }}">
+                                <img class="col-12" src="/media/{{ answer.image }}"/>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {% for comment in answer.comments.all %}
+                        <div class="answer-comment mb-3 px-3">
+                            <div class="hstack gap-3 mb-3">
+                                <a class="text-decoration-none" href="{% url 'study:account_detail' comment.user.pk %}">
+                                    {% if comment.user.icon %}
+                                        <img src="/media/{{ comment.user.icon }}" alt="{{ comment.user.pk }}" width="28" height="28" class="rounded-circle">
+                                    {% else %}
+                                        <img src="{% static 'images/default_icon.png' %}" alt="{{ comment.user.pk }}" width="28" height="28" class="rounded-circle">
+                                    {% endif %}
+                                    <span>{{ comment.user.username }}</span>
+                                </a>
+                                <small class="text-muted">{{ comment.created_at|date:'Y/n/j G:i' }}</small>
+                            </div>
+                            <p class="text-break">{{ comment.text|linebreaksbr }}</p>
+                        </div>
+                    {% endfor %}
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#collapseComment{{ answer.pk }}" aria-expanded="false" aria-controls="collapseComment">
+                        コメントする
+                    </button>
+                    <div class="collapse mt-3" id="collapseComment{{ answer.pk }}">
+                        <div class="card card-body">
+                            <form method="post" action="{% url 'qa:answer_comment_create' question.pk answer.pk %}">
+                                {% csrf_token %}
+                                <textarea name="text" class="form-control mb-3" rows="2" placeholder="コメントを入力" required></textarea>
+                                <button type="submit" class="btn btn-primary btn-sm">送信</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li class="list-group-item text-center py-5">回答がありません</li>
+        {% endif %}
+    </ul>
+
+    <!-- 画像表示モーダル -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <img class="col-12" id="image" src="/media/{{ question.image }}"/>
+            </div>
+        </div>
+    </div>
+
+    <!-- 記録削除モーダル -->
+    <div class="modal fade" id="deletionModal" tabindex="-1" aria-labelledby="deletionModalLabel">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deletionModalLabel">質問の削除</h1>
+                </div>
+                <div class="modal-body">
+                    <p>この質問を削除しますか？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <form method="post" action="{% url 'qa:question_delete' question.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">削除する</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.getElementById('imageModal').addEventListener('show.bs.modal', event => {
+        targetEl = event.relatedTarget;
+        const image = targetEl.dataset.image;
+        document.getElementById('image').setAttribute('src', '/media/' + image);
+    });
+</script>
+{% endblock %}

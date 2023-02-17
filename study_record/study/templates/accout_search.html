@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}アカウントを探す | StudyRecord{% endblock %}
+
+{% block active_account_search %}active{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 720px; margin-bottom: 10rem;">
+    <form method="get">
+        <div class="input-group mb-4">
+            <input type="search" class="form-control" name="query" placeholder="検索">
+            <button type="submit" class="btn btn-primary"><i class="material-symbols-outlined align-middle">search</i></button>
+        </div>
+    </form>
+    <ul class="list-group">
+        {% for customuser in customuser_list %}
+            <li class="list-group-item py-3">
+                <div class="hstack gap-2">
+                    <a href="{% url 'study:account_detail' customuser.pk %}">
+                        {% if customuser.icon %}
+                            <img src="/media/{{ customuser.icon }}" alt="{{ customuser.username }}" width="28" height="28" class="rounded-circle">
+                        {% else %}
+                            <img src="{% static 'images/default_icon.png' %}" alt="{{ user.username }}" width="28" height="28" class="rounded-circle">
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'study:account_detail' customuser.pk %}" class="text-decoration-none me-3">{{ customuser.username }}</a>
+                </div>
+                {% if customuser.introduce %}
+                    <div class="text-break mt-2">{{ customuser.introduce }}</div>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</main>
+{% endblock %}

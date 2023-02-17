@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}教科の編集 | StudyRecord{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 720px; margin-bottom: 10rem;">
+    <h4 class="mb-3">教科の編集</h4>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.name.id_for_label }}">教科名<span class="text-danger">*</span></label>
+            {% render_field form.name class='form-control' %}
+        </div>
+        <div class="mb-4">
+            <label class="form-label" for="{{ form.color.id_for_label }}">色<span class="text-danger">*</span></label>
+            {% render_field form.color type='color' class='form-control form-control-color flex-shrink-0' list='color-list' %}
+            <datalist id="color-list">
+                <option value="#ffa8a8"></option>
+                <option value="#ffa8d3"></option>
+                <option value="#ffa8ff"></option>
+                <option value="#d3a8ff"></option>
+                <option value="#a8a8ff"></option>
+                <option value="#a8d3ff"></option>
+                <option value="#a8ffff"></option>
+                <option value="#a8ffd3"></option>
+                <option value="#a8ffa8"></option>
+                <option value="#d3ffa8"></option>
+                <option value="#ffffa8"></option>
+                <option value="#ffd3a8"></option>
+            </datalist>
+        </div>
+        <button type="submit" class="btn btn-primary">更新</button>
+    </form>
+</main>
+{% endblock %}

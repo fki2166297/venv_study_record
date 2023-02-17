@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}ベストアンサーの設定 | StudyRecord{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 720px; margin-bottom: 10rem;">
+    <h4 class="mb-3">ベストアンサーの設定</h4>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">ベストアンサーに設定する</button>
+    </form>
+</main>
+{% endblock %}

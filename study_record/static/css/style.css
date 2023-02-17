@@ -1,0 +1,17 @@
+body {
+    font-family: "MS Pゴシック", sans-serif;
+    padding-top: 5rem;
+}
+
+.list-group-border-bottom {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.list-group-border-top-bottom {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.answer-comment {
+    border-left: 4px solid #dee2e6;
+}

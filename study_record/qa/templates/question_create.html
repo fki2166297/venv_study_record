@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}質問の投稿 | StudyRecord{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 720px; margin-bottom: 10rem;">
+    <h4 class="mb-3">質問投稿</h4>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}<span class="text-danger">*</span></label>
+            {% render_field form.title class='form-control' %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.text.id_for_label }}" class="form-label">{{ form.text.label }}<span class="text-danger">*</span></label>
+            {% render_field form.text class='form-control' %}
+        </div>
+        <div class="mb-4">
+            <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+            {% render_field form.image class='form-control' %}
+        </div>
+        <div class="mb-3 alert alert-info" role="alert">
+            <ul>
+                <li>一度投稿した質問は編集することができません。（ただし、補足説明の追加は可能です。）<br>内容をよく確認したうえで投稿してください。</li>
+            </ul>
+        </div>
+        <button type="submit" class="btn btn-primary">投稿</button>
+    </form>
+</main>
+{% endblock %}

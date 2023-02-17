@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}フォロー | StudyRecord{% endblock %}
+
+{% block active_account_search %}active{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 720px; margin-bottom: 10rem;">
+    <div class="hstack gap-2 px-2">
+        <a href="{% url 'study:account_detail' account.pk %}">
+            {% if account.icon %}
+                <img src="/media/{{ account.icon }}" alt="{{ account.username }}" width="28" height="28" class="rounded-circle">
+            {% else %}
+                <img src="{% static 'images/default_icon.png' %}" alt="{{ account.username }}" width="28" height="28" class="rounded-circle">
+            {% endif %}
+        </a>
+        <a href="{% url 'study:account_detail' account.pk %}" class="text-decoration-none me-3">{{ account.username }}</a>
+    </div>
+    <hr class="mt-2 mb-4">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" activearia-current="page" href="{% url 'study:account_following' account.pk  %}" role="button">フォロー</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'study:account_followers' account.pk  %}" role="button">フォロワー</a>
+        </li>
+    </ul>
+    <ul class="list-group list-group-flush list-group-border-bottom">
+        {% if connection_list %}
+            {% for connection in connection_list %}
+                <li class="list-group-item py-3">
+                    <div class="hstack gap-2 mb-2">
+                        <a href="{% url 'study:account_detail' connection.following.pk %}">
+                            {% if connection.icon %}
+                                <img src="/media/{{ connection.icon }}" alt="{{ connection.following.username }}" width="28" height="28" class="rounded-circle">
+                            {% else %}
+                                <img src="{% static 'images/default_icon.png' %}" alt="{{ connection.following.username }}" width="28" height="28" class="rounded-circle">
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'study:account_detail' connection.following.pk %}" class="text-decoration-none me-3">{{ connection.following.username }}</a>
+                    </div>
+                    <div class="text-break">{{ connection.following.introduce }}</div>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li class="list-group-item text-center py-5">フォローユーザーが0人です</li>
+        {% endif %}
+    </ul>
+</main>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}プロフィールの更新 | StudyRecord{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 960px; margin-bottom: 10rem;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.username.id_for_label }}">ユーザー名<span class="text-danger">*</span></label>
+            {% render_field form.username class='form-control' %}
+            <div class="form-text">全角文字、半角英数字、@/./+/-/_ で150文字以下にしてください。</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.icon.introduce }}">自己紹介</label>
+            {% render_field form.introduce class='form-control' rows=4 %}
+            <div class="form-text">150文字以下で入力してください。</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.icon.id_for_label }}">アイコン</label>
+            {% render_field form.icon class='form-control' %}
+        </div>
+        <button type="submit" class="btn btn-primary">更新</button>
+    </form>
+</main>
+{% endblock %}

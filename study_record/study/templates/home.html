@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}StudyRecord{% endblock %}
+
+{% block active_home %}active{% endblock %}
+
+{% block contents %}
+<main class="container-lg" style="margin-bottom: 10rem;">
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <h6 class="card-header py-3">自分の記録</h6>
+                <div class="card-body p-0">
+                    {% if studyrecord_list %}
+                        <div class="table-responsive-sm">
+                            <table class="table table-hover" id="myRecordTable" style="">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4    fw-light text-muted" scope="col" style="font-size: 11pt;">教科</th>
+                                        <th class="px-sm-4 fw-light text-muted" scope="col" style="font-size: 11pt;">学習時間</th>
+                                        <th class="px-sm-4 fw-light text-muted" scope="col" style="font-size: 11pt;">公開設定</th>
+                                        <th class="px-sm-4 fw-light text-muted" scope="col" style="font-size: 11pt;">日時</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for studyrecord in studyrecord_list %}
+                                        <tr class="position-relative" data-href="{% url 'study:studyrecord_update' studyrecord.pk %}" role="button">
+                                            <td class="p-0">
+                                                <div class="px-4 py-2 py-sm-3" style="border-left: 10px solid {{ studyrecord.subject.color }};">{{ studyrecord.subject }}</div>
+                                            </td>
+                                            <td class="px-sm-4 py-sm-3">{{ studyrecord.minutes }}</td>
+                                            <td class="px-sm-4 py-sm-3">{% if studyrecord.publication == 'follow' %}公開{% else %}非公開{% endif %}</td>
+                                            <td class="px-sm-4 py-sm-3">{{ studyrecord.studied_at|date:'n/j G:i' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="col-12 py-5 text-center">記録がありません</div>
+                    {% endif %}
+                </div>
+
+                <!-- ページネーション -->
+                {% if is_paginated %}
+                    <div class="card-footer border-top-0 d-flex">
+                        <ul class="pagination pagination-sm justify-content-center ms-auto mb-0">
+                            <!-- 前ページへのリンク -->
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if tab %}&tab={{ tab }}{% endif %}">&laquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><a class="page-link">&laquo;</a></li>
+                            {% endif %}
+                            <!-- ページ数表示 -->
+                            {% for page_num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == page_num %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_num }}{% if tab %}&tab={{ tab }}{% endif %}">{{ page_num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            <!-- 次ページへのリンク -->
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if tab %}&tab={{ tab }}{% endif %}">&raquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><a class="page-link">&raquo;</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="vstack gap-4" style="position: sticky; top: 5rem;">
+                <a class="btn btn-primary d-none d-lg-block col-12" href="{% url 'study:studyrecord_create' %}" role="button">記録の作成</a>
+
+                <div class="card shadow-sm">
+                    <h6 class="card-header py-3">フォローユーザーの記録</h6>
+                    <ul class="list-group list-group-flush">
+                        {% if following_records %}
+                            {% for following_record in following_records %}
+                                <li class="list-group-item px-lg-4">
+                                    <div class="hstack mb-2">
+                                        <a class="text-decoration-none" href="{% url 'study:account_detail' following_record.user.pk %}">
+                                            {% if following_record.user.icon %}
+                                                <img src="/media/{{ following_record.user.icon }}" alt="{{ following_record.user.username }}" width="26" height="26" class="rounded-circle">
+                                            {% else %}
+                                                <img src="{% static 'images/default_icon.png' %}" alt="{{ user.username }}" width="26" height="26" class="rounded-circle">
+                                            {% endif %}
+                                            <small>{{ following_record.user.username }}</small>
+                                        </a>
+                                    </div>
+                                    <div class="card card-body hstack gap-3">
+                                        <span>{{ following_record.subject }}</span>
+                                        <span>{{ following_record.minutes }}</span>
+                                        <small class="text-muted ms-auto">{{ following_record.studied_at|date:'n/j G:i' }}</small>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item py-4 text-center">記録がありません</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a class="btn btn-primary rounded-circle d-lg-none position-fixed bottom-0 end-0 m-3 d-flex justify-content-center align-items-center" style=" width: 56px; height: 56px;" href="{% url 'study:studyrecord_create' %}" role="button"><div class="material-symbols-outlined">add</div></a>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.querySelectorAll('#myRecordTable > tbody > tr').forEach((element) => {
+        element.onclick = event => {
+            window.location.href = event.currentTarget.dataset.href;
+        }
+    });
+</script>
+{% endblock %}

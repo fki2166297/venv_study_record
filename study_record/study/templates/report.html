@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}レポート | StudyRecord{% endblock %}
+
+{% block active_report %}active{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="margin-bottom: 10rem;">
+    <table class="table table-bordered shadow-sm mb-4" style="table-layout: fixed;">
+        <thead>
+            <tr>
+                <th class="text-center" scope="col">今日</th>
+                <th class="text-center" scope="col">今週</th>
+                <th class="text-center" scope="col">今月</th>
+                <th class="text-center" scope="col">総計</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white">
+            <tr>
+                <td class="text-center">{{ today_sum }}</td>
+                <td class="text-center">{{ week_sum }}</td>
+                <td class="text-center">{{ month_sum }}</td>
+                <td class="text-center">{{ total }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header hstack ">
+                    <h6>学習記録</h6>
+                    <div class="btn-group ms-auto m-0" role="group" aria-label="ボタングループ">
+                        <button type="button" class="btn btn-primary active" id="weekBtn">週</button>
+                        <button type="button" class="btn btn-primary" id="monthBtn">月</button>
+                        <button type="button" class="btn btn-primary" id="yearBtn">年</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 棒グラフ -->
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <h6 class="card-header py-3">割合</h6>
+                <div class="card-body">
+                    <div class="col-md-8 mx-auto">
+                        <!-- 円グラフ -->
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+    // 分（数値）を'〇時間〇分'の文字列に変換する
+    function toTimeStr(minutes) {
+        if (minutes >= 60)
+            return ~~(minutes / 60) + '時間' + ((minutes % 60) ? (minutes % 60) + '分' : '');
+        else if (minutes != 0)
+            return minutes + '分';
+    }
+
+    function drawBarChart(data, title=null) {
+        window.barChart = new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: data,
+            options: {
+                plugins: {
+                    title,
+                    tooltip: {
+                        callbacks: {
+                            // ラベルに表示する勉強時間の形式を変更
+                            label: context => {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += toTimeStr(context.parsed.y);
+                                }
+                                return label;
+                            },
+                        },
+                    },
+                    legend: {
+                        display: window.screen.width > 414,
+                        position: 'bottom',
+                    },
+                },
+                responsive: true,
+                scales: {
+                    x: {
+                        stacked: true,
+                        scaleLabel: {
+                            display: window.screen.width > 414,
+                        },
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: {
+                            stepSize: 30,
+                            // 目盛りの勉強時間の表示形式を変更
+                            callback: (value, index, ticks) => {
+                                if (value >= 60) value = (value / 60) + '時間';
+                                else if (value != 0)  value = value + '分';
+                                return value;
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    function drawPieChart(data) {
+        window.pieChart = new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            // ラベルに表示する勉強時間の形式を変更
+                            label: context => {
+                                let label = context.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed !== null) {
+                                    label += toTimeStr(context.parsed);
+                                }
+                                return label;
+                            },
+                        },
+                    },
+                    legend: {
+                        position: 'bottom',
+                    },
+                },
+            },
+        });
+    }
+
+    // ボタングループにactiveクラスを付与する
+    function setActive(elem, ...elems) {
+        elem.classList.add('active');
+        elems.forEach(el => {
+            el.classList.remove('active');
+        });
+    }
+
+    const weekBtn = document.getElementById('weekBtn');
+    const monthBtn = document.getElementById('monthBtn');
+    const yearBtn = document.getElementById('yearBtn');
+
+    const now = new Date();
+
+    window.addEventListener('DOMContentLoaded', event => {
+        fetch('{% url "study:get_bar_chart_data_week" %}')
+            .then(response => {
+                return response.json();
+            }).then(response => {
+                drawBarChart(response);
+            }).catch(error => {
+                console.log(error);
+            });
+    });
+
+    drawPieChart({{ pie_chart|safe }});
+
+
+    weekBtn.onclick = () => {
+        if (barChart) {
+            barChart.destroy();
+        }
+
+        fetch('{% url "study:get_bar_chart_data_week" %}')
+            .then(response => {
+                return response.json();
+            }).then(response => {
+                drawBarChart(response);
+            }).catch(error => {
+                console.log(error);
+            });
+        setActive(weekBtn, monthBtn, yearBtn);
+    }
+
+
+    monthBtn.onclick = () => {
+        if (barChart) {
+            barChart.destroy();
+        }
+
+        fetch('{% url "study:get_bar_chart_data_month" %}')
+            .then(response => {
+                return response.json();
+            }).then(response => {
+                drawBarChart(response, {
+                    display: true,
+                    text: (now.getMonth() + 1) + '月',
+                });
+            }).catch(error => {
+                console.log(error);
+            });
+        setActive(monthBtn, weekBtn, yearBtn);
+    }
+
+
+    yearBtn.onclick = () => {
+        if (barChart) {
+            barChart.destroy();
+        }
+
+        fetch('{% url "study:get_bar_chart_data_year" %}')
+            .then(response => {
+                return response.json();
+            }).then(response => {
+                drawBarChart(response, {
+                    display: true,
+                    text: now.getFullYear() + '年',
+                });
+            }).catch(error => {
+                console.log(error);
+            });
+        setActive(yearBtn, weekBtn, monthBtn);
+    }
+</script>
+{% endblock %}

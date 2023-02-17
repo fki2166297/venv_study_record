@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load widget_tweaks %}
+
+{% block title %}ルームの作成 | StudyRecord{% endblock %}
+
+{% block contents %}
+<main class="container-md" style="max-width: 720px; margin-bottom: 10rem;">
+    <h5 class="mb-3">ルームの作成</h5>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.name.id_for_label }}">ルーム名<span class="text-danger">*</span></label>
+            {% render_field form.name class='form-control' %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.publication.id_for_label }}">公開設定<span class="text-danger">*</span></label>
+            {% render_field form.publication class='form-select' %}
+        </div>
+        <button type="submit" class="btn btn-primary">作成</button>
+    </form>
+</main>
+{% endblock %}
