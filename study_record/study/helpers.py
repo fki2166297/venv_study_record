@@ -49,7 +49,7 @@ def minutes_sum(queryset, start=None, end=None):
 def barchart_datasets(queryset, start, end):
     datasets = []
 
-    DAYS = (end - start).days + 1
+    days = (end - start).days + 1
 
     # データに含まれる教科ID、教科名、教科の色をタプルのリストで取得する
     subject_list = queryset.select_related().values_list('subject', 'subject__name', 'subject__color').order_by('subject').distinct()
@@ -61,7 +61,7 @@ def barchart_datasets(queryset, start, end):
             'data': [],
         }
 
-        for i in range(DAYS):
+        for i in range(days):
             dt_val = start + timedelta(days=i)
             d_start, d_end = day_start_end(dt_val)
 

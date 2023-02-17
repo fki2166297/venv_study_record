@@ -38,6 +38,9 @@
                             <a class="nav-link {% block active_report %}{% endblock %}" href="{% url 'study:report' %}"><i class="bi bi-bar-chart-line mx-1"></i>レポート</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% block active_room %}{% endblock %}" href="{% url 'room:room_top' %}"><i class="bi bi-door-open mx-1"></i>ルーム</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% block active_qa %}{% endblock %}" href="{% url 'qa:qa' %}"><i class="bi bi-chat-text mx-1"></i>Q&ampA</a>
                         </li>
                         <li class="nav-item d-sm-none">

@@ -3,11 +3,8 @@ from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser):
-    icon      = models.ImageField(verbose_name="アイコン", upload_to="account_icons/", null=True, blank=True)
-    introduce = models.TextField(verbose_name="自己紹介", max_length=200, null=True, blank=True)
-
-    class Meta:
-        verbose_name_plural = "CustomUser"
+    icon      = models.ImageField(upload_to="account_icons/", null=True, blank=True)
+    introduce = models.TextField(max_length=200, null=True, blank=True)
 
 
 class Connection(models.Model):

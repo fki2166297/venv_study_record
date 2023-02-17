@@ -1,17 +1,14 @@
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, render
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
 from django.views import generic
 from django.db.models import Prefetch, Q
-from .models import Question, Answer, AnswerComment
+from .models import Question, Answer, Comment
 from .forms import QuestionCreateForm, AnswerCreateForm
 import datetime as dt
 
 
-# Create your views here.
 class QuestionAndAnswerView(LoginRequiredMixin, generic.ListView):
     template_name = 'qa.html'
     paginate_by = 30
@@ -20,7 +17,6 @@ class QuestionAndAnswerView(LoginRequiredMixin, generic.ListView):
         query = self.request.GET.get('query')
         tab = self.request.GET.get('tab')
         sort = self.request.GET.get('sort')
-        subject = self.request.GET.get('subject')
 
         queryset = Question.objects.order_by('-created_at')
         if query:
@@ -53,7 +49,7 @@ class QuestionDetailView(LoginRequiredMixin, generic.DetailView):
         answer_list = Answer.objects.select_related('user').prefetch_related(
             Prefetch(
                 'comments',
-                queryset=AnswerComment.objects.select_related('user').order_by('created_at')
+                queryset=Comment.objects.select_related('user').order_by('created_at')
             )
         ).filter(question=self.kwargs['pk']).order_by('-created_at').order_by('-self_resolution').order_by('-is_best')
 
@@ -64,16 +60,16 @@ class QuestionDetailView(LoginRequiredMixin, generic.DetailView):
         return context
 
 
-@login_required
-def answer_comment_create_view(request, *args, **kwargs):
-    comment = AnswerComment.objects.create(
-        user=request.user,
-        text=request.POST['text'],
-        answer=Answer.objects.get(pk=kwargs['a_pk'])
-    )
-    comment.save()
-    messages.success(request, '回答にコメントしました。')
-    return HttpResponseRedirect(reverse_lazy('qa:question_detail', kwargs={'pk': kwargs['pk']}))
+class CommentCreateView(LoginRequiredMixin, generic.View):
+    def post(self, request, *args, **kwargs):
+        comment = Comment.objects.create(
+            user=request.user,
+            text=request.POST['text'],
+            answer=Answer.objects.get(pk=kwargs['a_pk'])
+        )
+        comment.save()
+        messages.success(request, '回答にコメントしました。')
+        return HttpResponseRedirect(reverse_lazy('qa:question_detail', kwargs={'pk': kwargs['pk']}))
 
 
 class QuestionCreateView(LoginRequiredMixin, generic.CreateView):
@@ -120,12 +116,12 @@ class AddSupplementView(LoginRequiredMixin, generic.UpdateView):
         return super().form_invalid(form)
 
 
-@login_required
-def question_delete_view(request, *args, **kwargs):
-    question = Question.objects.get(pk=kwargs['pk'])
-    question.delete()
-    messages.success(request, '質問を削除しました。')
-    return HttpResponseRedirect(reverse_lazy('qa:qa'))
+class QuestionDeleteView(LoginRequiredMixin, generic.View):
+    def post(self, request, *args, **kwargs):
+        question = Question.objects.get(pk=kwargs['pk'])
+        question.delete()
+        messages.success(request, '質問を削除しました。')
+        return HttpResponseRedirect(reverse_lazy('qa:qa'))
 
 
 class AnswerCreateView(LoginRequiredMixin, generic.CreateView):
@@ -188,9 +184,10 @@ class SelfResolutionView(LoginRequiredMixin, generic.CreateView):
         return super().form_invalid(form)
 
 
-@login_required
-def set_best_answer_view(request, *args, **kwargs):
-    if request.method == 'POST':
+class SetBestAnswerView(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'set_best_answer.html'
+
+    def post(self, request, *args, **kwargs):
         answer = Answer.objects.get(pk=kwargs['a_pk'])
         answer.is_best = True
         answer.save()
@@ -201,5 +198,3 @@ def set_best_answer_view(request, *args, **kwargs):
 
         messages.success(request, 'ベストアンサーを設定しました。')
         return HttpResponseRedirect(reverse_lazy('qa:question_detail', kwargs={'pk': kwargs['pk']}))
-    else:
-        return render(request, 'set_best_answer.html')

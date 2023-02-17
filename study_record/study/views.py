@@ -1,8 +1,6 @@
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import generic
 from django.db.models import Q
@@ -118,60 +116,60 @@ class ReportView(LoginRequiredMixin, generic.TemplateView):
         return context
 
 
-@login_required
-def get_bar_chart_data_week(request):
-    now = dt.datetime.now().astimezone()
-    w_start, w_end = week_start_end(now)
+class GetBarChartDataWeek(LoginRequiredMixin, generic.View):
+    def get(self, request, *args, **kwargs):
+        now = dt.datetime.now().astimezone()
+        w_start, w_end = week_start_end(now)
 
-    # 1週間分のデータを取得する
-    queryset = StudyRecord.objects.filter(user=request.user, studied_at__range=(w_start, w_end)).order_by('studied_at').select_related()
+        # 1週間分のデータを取得する
+        queryset = StudyRecord.objects.filter(user=request.user, studied_at__range=(w_start, w_end)).order_by('studied_at').select_related()
 
-    # 横軸ラベルを作る
-    labels = []
-    for i in range(7):
-        date = w_start + dt.timedelta(days=i)
-        weekday = ('日', '月', '火', '水', '木', '金', '土')[i]
-        date_str = f'{date.month}/{date.day} ({weekday})'
-        labels.append(date_str)
+        # 横軸ラベルを作る
+        labels = []
+        for i in range(7):
+            date = w_start + dt.timedelta(days=i)
+            weekday = ('日', '月', '火', '水', '木', '金', '土')[i]
+            date_str = f'{date.month}/{date.day} ({weekday})'
+            labels.append(date_str)
 
-    data = {
-        'labels': labels,
-        'datasets': barchart_datasets(queryset, w_start, w_end)
-    }
+        data = {
+            'labels': labels,
+            'datasets': barchart_datasets(queryset, w_start, w_end)
+        }
 
-    return JsonResponse(data)
-
-
-@login_required
-def get_bar_chart_data_month(request):
-    now = dt.datetime.now().astimezone()
-    m_start, m_end = month_start_end(now)
-
-    # 1か月分のデータを取得する
-    studyrecord = StudyRecord.objects.filter(user=request.user, studied_at__range=(m_start, m_end)).order_by('studied_at').select_related()
-
-    data = {
-        'labels': [i + 1 for i in range((m_end - m_start).days + 1)],
-        'datasets': barchart_datasets(studyrecord, m_start, m_end)
-    }
-
-    return JsonResponse(data)
+        return JsonResponse(data)
 
 
-@login_required
-def get_bar_chart_data_year(request):
-    now = dt.datetime.now().astimezone()
-    y_start, y_end = year_start_end(now)
+class GetBarChartDataMonth(LoginRequiredMixin, generic.View):
+    def get(self, request, *args, **kwargs):
+        now = dt.datetime.now().astimezone()
+        m_start, m_end = month_start_end(now)
 
-    # 1年分のデータを取得する
-    queryset = StudyRecord.objects.filter(user=request.user, studied_at__range=(y_start, y_end)).order_by('studied_at').select_related()
+        # 1か月分のデータを取得する
+        studyrecord = StudyRecord.objects.filter(user=request.user, studied_at__range=(m_start, m_end)).order_by('studied_at').select_related()
 
-    data = {
-        'labels': ('1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'),
-        'datasets': barchart_datasets_year(queryset, y_start, y_end)
-    }
+        data = {
+            'labels': [i + 1 for i in range((m_end - m_start).days + 1)],
+            'datasets': barchart_datasets(studyrecord, m_start, m_end)
+        }
 
-    return JsonResponse(data)
+        return JsonResponse(data)
+
+
+class GetBarChartDataYear(LoginRequiredMixin, generic.View):
+    def get(self, request, *args, **kwargs):
+        now = dt.datetime.now().astimezone()
+        y_start, y_end = year_start_end(now)
+
+        # 1年分のデータを取得する
+        queryset = StudyRecord.objects.filter(user=request.user, studied_at__range=(y_start, y_end)).order_by('studied_at').select_related()
+
+        data = {
+            'labels': ('1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'),
+            'datasets': barchart_datasets_year(queryset, y_start, y_end)
+        }
+
+        return JsonResponse(data)
 
 
 class SubjectView(LoginRequiredMixin, generic.ListView):
@@ -221,16 +219,17 @@ class SubjectUpdateView(LoginRequiredMixin, generic.UpdateView):
         return super().form_invalid(form)
 
 
-@login_required
-def subject_delete_view(request, *args, **kwargs):
-    subject = Subject.objects.get(pk=kwargs['pk'])
-    # StudyRecordのsubjectフィールドはSubjectモデルを外部キーに設定しているため、
-    # Subjectのレコードを削除するのではなく、使用不可（is_availavle = False）に設定する
-    subject.is_available = False
-    subject.save()
 
-    messages.success(request, '教科を削除しました。')
-    return HttpResponseRedirect(reverse_lazy('study:subject'))
+class SubjectDeleteView(LoginRequiredMixin, generic.View):
+    def post(self, request, *args, **kwargs):
+        subject = Subject.objects.get(pk=kwargs['pk'])
+        # StudyRecordのsubjectフィールドはSubjectモデルを外部キーに設定しているため、
+        # Subjectのレコードを削除するのではなく、使用不可（is_availavle = False）に設定する
+        subject.is_available = False
+        subject.save()
+
+        messages.success(request, '教科を削除しました。')
+        return HttpResponseRedirect(reverse_lazy('study:subject'))
 
 
 class AccountSearchView(LoginRequiredMixin, generic.ListView):
@@ -303,40 +302,39 @@ class AccountFollowersView(LoginRequiredMixin, generic.TemplateView):
         return context
 
 
-# フォロー
-@login_required
-def follow_view(request, *args, **kwargs):
-    try:
-        follower = CustomUser.objects.get(pk=request.user.pk)
-        following = CustomUser.objects.get(pk=kwargs['pk'])
-    except CustomUser.DoesNotExist:
-        messages.warning(request, f'ユーザーが存在しません')
-        return HttpResponseRedirect(reverse_lazy('study:home'))
-    else:
-        if follower.pk == following.pk:
-            messages.warning(request, '自分自身はフォローできません')
+class FollowView(LoginRequiredMixin, generic.View):
+    def get(self, request, *args, **kwargs):
+        try:
+            follower = CustomUser.objects.get(pk=request.user.pk)
+            following = CustomUser.objects.get(pk=kwargs['pk'])
+        except CustomUser.DoesNotExist:
+            messages.warning(request, f'ユーザーが存在しません')
+            return HttpResponseRedirect(reverse_lazy('study:home'))
         else:
-            _, created = Connection.objects.get_or_create(follower=follower, following=following)
-            if (created):
-                messages.success(request, f'{following.username}をフォローしました')
+            if follower.pk == following.pk:
+                messages.warning(request, '自分自身はフォローできません')
             else:
-                messages.warning(request, f'あなたはすでに{following.username}をフォローしています')
-        return HttpResponseRedirect(reverse_lazy('study:account_detail', kwargs={'pk': following.pk}))
+                _, created = Connection.objects.get_or_create(follower=follower, following=following)
+                if (created):
+                    messages.success(request, f'{following.username}をフォローしました')
+                else:
+                    messages.warning(request, f'あなたはすでに{following.username}をフォローしています')
+            return HttpResponseRedirect(reverse_lazy('study:account_detail', kwargs={'pk': following.pk}))
 
-# フォロー解除
-@login_required
-def unfollow_view(request, *args, **kwargs):
-    try:
-        follower = CustomUser.objects.get(pk=request.user.pk)
-        following = CustomUser.objects.get(pk=kwargs['pk'])
-        if follower.pk == following.pk:
-            messages.warning(request, '自分自身のフォローは外すことができません')
+
+class UnfollowView(LoginRequiredMixin, generic.View):
+    def get(self, request, *args, **kwargs):
+        try:
+            follower = CustomUser.objects.get(pk=request.user.pk)
+            following = CustomUser.objects.get(pk=kwargs['pk'])
+            if follower.pk == following.pk:
+                messages.warning(request, '自分自身のフォローは外すことができません')
+            else:
+                unfollow = Connection.objects.get(follower=follower, following=following)
+                unfollow.delete()
+                messages.success(request, f'あなたは{following.username}のフォローを解除しました')
+        except CustomUser.DoesNotExist:
+            messages.warning(request, f'ユーザーが存在しません')
+            return HttpResponseRedirect(reverse_lazy('study:home'))
         else:
-            unfollow = Connection.objects.get(follower=follower, following=following)
-            unfollow.delete()
-            messages.success(request, f'あなたは{following.username}のフォローを解除しました')
-    except CustomUser.DoesNotExist:
-        messages.warning(request, f'ユーザーが存在しません')
-        return HttpResponseRedirect(reverse_lazy('study:home'))
-    else:
-        return HttpResponseRedirect(reverse_lazy('study:account_detail', kwargs={'pk': following.pk}))
+            return HttpResponseRedirect(reverse_lazy('study:account_detail', kwargs={'pk': following.pk}))
