@@ -42,42 +42,49 @@
     {% endif %}
 
     <h5>パブリックルーム</h5>
-    <hr>
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <hr class="mt-1 mb-4">
+    <div class="row row-cols-1 row-cols-lg-3 g-4">
         {% for public_room in public_room_list %}
             <div class="col">
-                <div class="card shadow-sm">
-                    <h5 class="card-header bg-white py-3">
-                        <a href="{% url 'room:select_subject' public_room.pk %}">{{ public_room.name }}</a>
-                    </h5>
-                    <div class="card-body z-0">
-                        <a class="text-decoration-none hstack gap-2" href="{% url 'study:account_detail' public_room.host.pk %}">
-                            {% if public_room.host.icon %}
-                                <img src="/media/{{ public_room.host.icon }}" alt="{{ public_room.host.username }}" width="24" height="24" class="rounded-circle">
-                            {% else %}
-                                <img src="{% static 'images/default_icon.png' %}" alt="{{ public_room.host.username }}" width="24" height="24" class="rounded-circle">
-                            {% endif %}
-                            <div class="z-1">{{ public_room.host.username }}</div>
-                        </a>
+                <div class="card card-body p-2 shadow">
+                    <div class="card-body text-truncate">
+                        <div class="mb-2 text-truncate">
+                            <a href="{% url 'room:select_subject' public_room.pk %}">{{ public_room.name }}</a>
+                        </div>
+                        <div class="hstack">
+                            <a class="text-decoration-none hstack gap-2" href="{% url 'study:account_detail' public_room.host.pk %}">
+                                {% if public_room.host.icon %}
+                                    <img src="/media/{{ public_room.host.icon }}" alt="{{ public_room.host.username }}" width="24" height="24" class="rounded-circle">
+                                {% else %}
+                                    <img src="{% static 'images/default_icon.png' %}" alt="{{ public_room.host.username }}" width="24" height="24" class="rounded-circle">
+                                {% endif %}
+                                <div>{{ public_room.host.username }}</div>
+                            </a>
+                            <small class="ms-auto text-muted">{{ public_room.created_at|date:'n/j G:i' }}</small>
+                        </div>
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
 
-    <div class="modal" tabindex="-1">
-        <div class="modal-dialog">
+    <div class="modal" id="roomInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">モーダルのタイトル</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
                 </div>
                 <div class="modal-body">
-                    <p>モーダルボディの本文。</p>
+                    <p>前回入室したルームの学習データが残っています。</p>
+                    <p>データを送信しますか？</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-                    <button type="button" class="btn btn-primary">変更を保存</button>
+                    <button type="button" id="deleteRecords" class="btn btn-danger" data-bs-dismiss="modal" onclick="deleteRecords()">削除</button>
+                    <form method="post" id="postRecordsForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="records">
+                        <button type="button" id="submitRecordsBtn" class="btn btn-primary">送信</button>
+                    </post>
                 </div>
             </div>
         </div>
@@ -87,6 +94,28 @@
 
 {% block script %}
 <script>
+    function deleteRecords() {
+        localStorage.removeItem('room');
+        localStorage.removeItem('records');
+        document.cookie = "submit_records=yes; max-age=0";
+    }
 
+    const records = localStorage.getItem('records');
+
+    console.log(document.cookie.indexOf('submit_records=yes'))
+    if ((document.cookie.indexOf('submit_records=yes') !== -1)) {
+        deleteRecords();
+    } else if (records) {
+        document.getElementById('postRecordsForm').records.value = localStorage.getItem('records');
+
+        const roomInfoModal = new bootstrap.Modal('#roomInfoModal', {keyboard: false});
+        roomInfoModal.show();
+    }
+
+    document.getElementById('submitRecordsBtn').addEventListener('click', () => {
+        const leaveRoomForm = document.getElementById('leaveRoomForm');
+        document.cookie = 'submit_records=yes';
+        document.getElementById('postRecordsForm').submit();
+    });
 </script>
 {% endblock %}

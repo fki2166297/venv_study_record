@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 
 from pathlib import Path
-from telnetlib import AUTHENTICATION
 from django.contrib import messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

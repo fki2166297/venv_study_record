@@ -22,7 +22,7 @@
 </head>
 
 <body class="bg-light">
-    <header class="navbar navbar-expand-sm navbar-light bg-white shadow-sm fixed-top">
+    <header class="navbar navbar-expand-md navbar-light bg-white shadow-sm fixed-top">
         <div class="container-fluid px-5">
             <a class="navbar-brand fw-bold" href="{% url 'study:home' %}">StudyRecord</a>
             <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,23 +43,23 @@
                         <li class="nav-item">
                             <a class="nav-link {% block active_qa %}{% endblock %}" href="{% url 'qa:qa' %}"><i class="bi bi-chat-text mx-1"></i>Q&ampA</a>
                         </li>
-                        <li class="nav-item d-sm-none">
+                        <li class="nav-item d-md-none">
                             <a class="nav-link {% block active_subject %}{% endblock %}" href="{% url 'study:subject' %}"><i class="bi bi-book mx-1"></i>教科一覧</a>
                         </li>
-                        <li class="nav-item d-sm-none">
+                        <li class="nav-item d-md-none">
                             <a class="nav-link {% block active_account_search %}{% endblock %}" href="{% url 'study:account_search' %}">アカウントを探す</a>
                         </li>
-                        <li class="nav-item d-sm-none">
+                        <li class="nav-item d-md-none">
                             <a class="nav-link {% block active_account_detail %}{% endblock %}" href="{% url 'study:account_detail' user.pk %}">プロフィール</a>
                         </li>
-                        <li class="nav-item d-sm-none">
+                        <li class="nav-item d-md-none">
                             <a class="nav-link" href="{% url 'account_logout' %}">ログアウト</a>
                         </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
-                        <li class="nav-item d-none d-sm-block">
+                        <li class="nav-item d-none d-md-block">
                             <div class="dropdown">
                                 <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                     {% if user.icon %}
