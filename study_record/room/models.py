@@ -1,7 +1,7 @@
 from django.db import models
 from accounts.models import CustomUser
 
-
+# Create your models here.
 class RoomPublicationChoices(models.TextChoices):
     PUBLIC   = 'public', '全体公開'
     FOLLOWER = 'follower', 'フォロワーに公開'

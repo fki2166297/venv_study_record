@@ -10,6 +10,7 @@ from django.core import serializers
 import json
 
 
+# Create your views here.
 class RoomTopView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'room_top.html'
 

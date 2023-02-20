@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-
+# Create your models here.
 class CustomUser(AbstractUser):
     icon      = models.ImageField(upload_to="account_icons/", null=True, blank=True)
     introduce = models.TextField(max_length=200, null=True, blank=True)

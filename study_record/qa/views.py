@@ -8,7 +8,7 @@ from .models import Question, Answer, Comment
 from .forms import QuestionCreateForm, AnswerCreateForm
 import datetime as dt
 
-
+# Create your views here.
 class QuestionAndAnswerView(LoginRequiredMixin, generic.ListView):
     template_name = 'qa.html'
     paginate_by = 30

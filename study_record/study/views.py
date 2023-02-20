@@ -10,7 +10,7 @@ from .forms import StudyRecordForm, SubjectCreateForm
 import datetime as dt
 from .helpers import *
 
-
+# Create your views here.
 class HomeView(LoginRequiredMixin, generic.ListView):
     template_name = 'home.html'
     paginate_by = 10
