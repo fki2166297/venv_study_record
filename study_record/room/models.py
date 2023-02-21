@@ -30,8 +30,3 @@ class RoomMember(models.Model):
     user      = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     is_host   = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True)
-
-
-# class RoomMemberRecord(models.Model):
-#     user       = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-#     studied_at =
