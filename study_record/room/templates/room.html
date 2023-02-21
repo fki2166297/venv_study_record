@@ -67,7 +67,9 @@
                 return response.json();
             })
             .then(data => {
-                console.log(data)
+                const room_member =
+                console.log("%o", data);
+                console.log(data.room_member)
             });
 
         function getCookie(name) {
