@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
 from django.views import generic
 from .forms import RoomCreateForm, SubjectForm
-from .models import Room, RoomMember, RoomMessage
+from .models import Room
 from study.models import Subject, StudyRecord
 from django.core import serializers
 import json
@@ -36,9 +36,6 @@ class RoomTopView(LoginRequiredMixin, generic.TemplateView):
                 )
             )
         StudyRecord.objects.bulk_create(record_objects)
-
-        # ルームメンバーの削除
-        RoomMember.objects.filter(user=self.request.user).delete()
 
         messages.success(self.request, '学習記録を作成しました。')
         return HttpResponseRedirect(reverse_lazy('room:room_top'))
@@ -86,9 +83,6 @@ class SelectSubjectView(LoginRequiredMixin, generic.FormView):
         return reverse_lazy('room:room', kwargs={'pk': self.kwargs['pk']})
 
     def form_valid(self, form):
-        # ルームメンバーの作成
-        if not RoomMember.objects.filter(user=self.request.user).exists():
-            RoomMember.objects.create(room=Room.objects.get(pk=self.kwargs['pk']), user=self.request.user)
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -109,44 +103,24 @@ class RoomView(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['subject_list'] = Subject.objects.filter(user=self.request.user, is_available=True)
         context['room'] = room = Room.objects.get(pk=self.kwargs['pk'])
-        context['room_member'] = RoomMember.objects.filter(room=room)
         context['subject'] = Subject.objects.get(pk=self.request.session['subject'])
         return context
 
-    def post(self, request, *args, **kwargs):
-        # 学習記録の登録
-        record_objects = []
-        print(request.POST['records'])
-        records = json.loads(request.POST['records'])
-        for record in records:
-            record_objects.append(
-                StudyRecord(
-                    user=self.request.user,
-                    subject=Subject.objects.get(pk=int(record['subject'])),
-                    studied_at=record['studied_at'],
-                    minutes=int(record['microseconds'] / 1000 // 60),
-                )
-            )
-        StudyRecord.objects.bulk_create(record_objects)
+    # def post(self, request, *args, **kwargs):
+    #     # 学習記録の登録
+    #     record_objects = []
+    #     print(request.POST['records'])
+    #     records = json.loads(request.POST['records'])
+    #     for record in records:
+    #         record_objects.append(
+    #             StudyRecord(
+    #                 user=self.request.user,
+    #                 subject=Subject.objects.get(pk=int(record['subject'])),
+    #                 studied_at=record['studied_at'],
+    #                 minutes=int(record['microseconds'] / 1000 // 60),
+    #             )
+    #         )
+    #     StudyRecord.objects.bulk_create(record_objects)
 
-        # ルームメンバーの削除
-        RoomMember.objects.filter(user=self.request.user).delete()
-
-        messages.success(self.request, '退室しました。')
-        return HttpResponseRedirect(reverse_lazy('room:room_top'))
-
-
-class GetRoomMemberView(LoginRequiredMixin, generic.View):
-    def get(self, request, *args, **kwargs):
-        data = {
-            'room_member': serializers.serialize('json', RoomMember.objects.filter(room=kwargs['pk'])),
-        }
-        return JsonResponse(data)
-
-
-class GetRoomMessageView(LoginRequiredMixin, generic.View):
-    def get(self, request, *args, **kwargs):
-        data = {
-            'room_message': serializers.serialize('json', RoomMessage.objects.filter(room=kwargs['pk'])),
-        }
-        return JsonResponse(data)
+    #     messages.success(self.request, '退室しました。')
+    #     return HttpResponseRedirect(reverse_lazy('room:room_top'))

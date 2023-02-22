@@ -56,23 +56,49 @@
                 </div>
             </div>
         </div>
+        <input type="text" id="textInput">
+        <button type="button" id="sendBtn">send</button>
+        <p id="display"></p>
+        <div id="app">{{ message }}</div>
     </main>
 
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
     <script>
-        const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/{{ room.pk }}/`);
+        const { createApp } = Vue
 
-        {% comment %} await chatSocket.send('aaa') {% endcomment %}
+        createApp({
+          data() {
+            return {
+              message: 'Hello Vue!'
+            }
+          }
+        }).mount('#app')
+        const roomSocket = new WebSocket(`ws://${window.location.host}/ws/room/{{ room.pk }}/`);
 
-        chatSocket.onmessage = e => {
+        roomSocket.onmessage = e => {
             const data = JSON.parse(e.data);
             console.log(data)
         };
 
-        chatSocket.onclose = e => console.error('Chat socket closed unexpectedly');
+        document.getElementById('sendBtn').onclick = () => {
+            const sendData = {
+                message: document.getElementById('textInput').value,
+            }
+            roomSocket.send(JSON.stringify(sendData));
+        }
 
+        roomSocket.onclose = e => console.error('room socket closed unexpectedly');
+        roomSocket.onerror = e => console.log(e);
+
+
+        roomSocket.onmessage = e => {
+            const receiveData = JSON.parse(e.data);
+            console.log(receiveData)
+        }
 
         function getCookie(name) {
             if (document.cookie && document.cookie !== '') {

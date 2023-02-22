@@ -185,7 +185,7 @@ class SubjectCreateView(LoginRequiredMixin, generic.CreateView):
     form_class = SubjectCreateForm
 
     def get(self, request, **kwargs):
-        request.session['via'] = request.environ.get('HTTP_REFERER')
+        request.session['via'] = request.META['HTTP_REFERER']
         return super().get(request, **kwargs)
 
     def get_success_url(self):

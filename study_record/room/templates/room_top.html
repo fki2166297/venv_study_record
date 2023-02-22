@@ -23,23 +23,33 @@
             <a class="btn btn-primary col-12" href="{% url 'room:room_create' %}" role="button">ルームを作成する</a>
         </div>
     </div>
-    {% if follower_room_list %}
-        <h5>フォロー</h5>
-        {% for follower_room in follower_room_list %}
-            <div class="card card-body col-12">
-                <a class="card-title text-decoration-none fs-5" href="{% url 'room:select_subject' follower_room.pk %}">{{ follower_room.name }}</a>
-                <a class="text-decoration-none hstack gap-2" href="{% url 'study:account_detail' follower_room.user.pk %}">
-                    {% if follower_room.user.icon %}
-                        <img src="/media/{{ follower_room.user.icon }}" alt="{{ follower_room.user.username }}" width="28" height="28" class="rounded-circle">
-                    {% else %}
-                        <img src="{% static 'images/default_icon.png' %}" alt="{{ follower_room.user.username }}" width="28" height="28" class="rounded-circle">
-                    {% endif %}
-                    <span>{{ follower_room.user.username }}</span>
-                </a>
-                <a href="{% url 'room:select_subject' follower_room.pk %}">{{ follower_room.name }}</a>
+
+    <h5>自分のルーム</h5>
+    <hr class="mt-1 mb-4">
+    <div class="row row-cols-1 row-cols-lg-3 g-4 mb-5">
+        {% for my_room in my_room_list %}
+            <div class="col">
+                <div class="card card-body p-2 shadow">
+                    <div class="card-body text-truncate">
+                        <div class="mb-2 text-truncate">
+                            <a href="{% url 'room:select_subject' my_room.pk %}">{{ my_room.name }}</a>
+                        </div>
+                        <div class="hstack">
+                            <a class="text-decoration-none hstack gap-2" href="{% url 'study:account_detail' my_room.host.pk %}">
+                                {% if my_room.host.icon %}
+                                    <img src="/media/{{ my_room.host.icon }}" alt="{{ my_room.host.username }}" width="24" height="24" class="rounded-circle">
+                                {% else %}
+                                    <img src="{% static 'images/default_icon.png' %}" alt="{{ my_room.host.username }}" width="24" height="24" class="rounded-circle">
+                                {% endif %}
+                                <div>{{ my_room.host.username }}</div>
+                            </a>
+                            <small class="ms-auto text-muted">{{ my_room.created_at|date:'n/j G:i' }}</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         {% endfor %}
-    {% endif %}
+    </div>
 
     <h5>パブリックルーム</h5>
     <hr class="mt-1 mb-4">
