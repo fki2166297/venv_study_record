@@ -51,15 +51,18 @@
                 <div class="card">
                     <h6 class="card-header">チャット</h6>
                     <div class="card-body">
-
+                        <div id="app">
+                            <div v-for="message in messages">
+                                <chat v-bind:message="message"/>
+                            </div>
+                            <input class="form-control" type="text" id="chatMessageInput" v-on:keyup.enter="sendMessage">
+                            <input type="text" name="dummy" style="display:none;">
+                            <button class="btn btn-primary" v-on:click="sendMessage">送信</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <input type="text" id="textInput">
-        <button type="button" id="sendBtn">send</button>
-        <p id="display"></p>
-        <div id="app">{{ message }}</div>
     </main>
 
     <!-- Bootstrap -->
@@ -68,143 +71,158 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
     <script>
-        const { createApp } = Vue
+        window.onload = () => {
 
-        createApp({
-          data() {
-            return {
-              message: 'Hello Vue!'
-            }
-          }
-        }).mount('#app')
-        const roomSocket = new WebSocket(`ws://${window.location.host}/ws/room/{{ room.pk }}/`);
+            const roomSocket = new WebSocket(`ws://${window.location.host}/ws/room/{{ room.pk }}/`);
 
-        roomSocket.onmessage = e => {
-            const data = JSON.parse(e.data);
-            console.log(data)
-        };
+            Vue.createApp({
+                data() {
+                    return {
+                        messages: []
+                    }
+                },
+                components: {
+                    'chat': {
+                        props: ['object'],
+                        template: `
+                        <div>{{object.body}}</div>`
+                    },
+                },
+                method: {
+                    sendMessage: () => {
+                        console.log('send')
+                        const data = document.getElementById('chatMessageInput').value;
+                        roomSocket.send(JSON.stringify(data));
+                    },
+                    pushMessage: message => {
+                        this.messages.push(message)
+                    },
+                },
+                mounted() {
+                    roomSocket.onmessage = event => {
+                        console.log(event)
+                        pushMessage(JSON.parse(event.data));
+                    };
 
-        document.getElementById('sendBtn').onclick = () => {
-            const sendData = {
-                message: document.getElementById('textInput').value,
-            }
-            roomSocket.send(JSON.stringify(sendData));
-        }
+                    roomSocket.onerror = event => {
+                        console.log(event);
+                    }
 
-        roomSocket.onclose = e => console.error('room socket closed unexpectedly');
-        roomSocket.onerror = e => console.log(e);
+                    roomSocket.onclose = event => {
+                        console.error('room socket closed unexpectedly');
+                    };
+                }
+            }).mount('#app');
 
 
-        roomSocket.onmessage = e => {
-            const receiveData = JSON.parse(e.data);
-            console.log(receiveData)
-        }
 
-        function getCookie(name) {
-            if (document.cookie && document.cookie !== '') {
-                for (const cookie of document.cookie.split(';')) {
-                    const [key, value] = cookie.trim().split('=');
-                    if (key === name) {
-                        return decodeURIComponent(value);
+
+            function getCookie(name) {
+                if (document.cookie && document.cookie !== '') {
+                    for (const cookie of document.cookie.split(';')) {
+                        const [key, value] = cookie.trim().split('=');
+                        if (key === name) {
+                            return decodeURIComponent(value);
+                        }
                     }
                 }
+                return '';
             }
-            return '';
-        }
 
-        function getRecord(subject) {
-            const records = JSON.parse(localStorage.getItem('records'));
-            for (let i = 0; i < records.length; i++) {
-                if (parseInt(records[i].subject) === parseInt(subject)) {
-                    return {index: i, value: records[i]};
+            function getRecord(subject) {
+                const records = JSON.parse(localStorage.getItem('records'));
+                for (let i = 0; i < records.length; i++) {
+                    if (parseInt(records[i].subject) === parseInt(subject)) {
+                        return {index: i, value: records[i]};
+                    }
                 }
+                return null;
             }
-            return null;
-        }
 
-        const loadedDate = new Date();
+            const loadedDate = new Date();
 
-        if (!localStorage.getItem('room')) {
-            const room = {
-                'entry': loadedDate.toISOString(),
-                'microseconds': '0',
+            if (!localStorage.getItem('room')) {
+                const room = {
+                    'entry': loadedDate.toISOString(),
+                    'microseconds': '0',
+                }
+                localStorage.setItem('room', JSON.stringify(room));
             }
-            localStorage.setItem('room', JSON.stringify(room));
-        }
 
-        if (!localStorage.getItem('records')) {
-            const records = [
+            if (!localStorage.getItem('records')) {
+                const records = [
                 {
                     'subject': '{{ subject.id }}',
                     'studied_at': loadedDate.toISOString(),
-                    'microseconds': '0',
-                },
-            ]
-            localStorage.setItem('records', JSON.stringify(records));
-        }
+                        'microseconds': '0',
+                    },
+                    ]
+                    localStorage.setItem('records', JSON.stringify(records));
+                }
 
-        if (!getRecord({{ subject.id }})) {
-            const records = JSON.parse(localStorage.getItem('records'));
-            const record = {
-                'subject': '{{ subject.id }}',
-                'studied_at': loadedDate.toISOString(),
-                'microseconds': '0',
+                if (!getRecord({{ subject.id }})) {
+                    const records = JSON.parse(localStorage.getItem('records'));
+                    const record = {
+                        'subject': '{{ subject.id }}',
+                        'studied_at': loadedDate.toISOString(),
+                        'microseconds': '0',
+                    }
+                    records.push(record);
+                    localStorage.setItem('records', JSON.stringify(records));
+                }
+
+                const record = getRecord({{ subject.id }});
+                const room = JSON.parse(localStorage.getItem('room'));
+                let elapsedTimeRecord = 0;
+
+                function updateRecord() {
+                const records = JSON.parse(localStorage.getItem('records'));
+                const newRecord = {
+                    'subject': record.value.subject,
+                    'studied_at': record.value.studied_at,
+                    'microseconds': elapsedTimeRecord,
+                }
+                records[record.index] = newRecord;
+                localStorage.setItem('records', JSON.stringify(records));
             }
-            records.push(record);
-            localStorage.setItem('records', JSON.stringify(records));
-        }
 
-        const record = getRecord({{ subject.id }});
-        const room = JSON.parse(localStorage.getItem('room'));
-        let elapsedTimeRecord = 0;
+            function getTimeStr(microseconds) {
+                const h = ('00' + Math.floor(microseconds / 1000 / 60 / 60)).slice(-2);
+                const m = ('00' + Math.floor(microseconds / 1000 / 60 % 60)).slice(-2);
+                const s = ('00' + Math.floor(microseconds / 1000 % 60     )).slice(-2);
 
-        function updateRecord() {
-            const records = JSON.parse(localStorage.getItem('records'));
-            const newRecord = {
-                'subject': record.value.subject,
-                'studied_at': record.value.studied_at,
-                'microseconds': elapsedTimeRecord,
+                return h + ':' + m + ':' + s;
             }
-            records[record.index] = newRecord;
-            localStorage.setItem('records', JSON.stringify(records));
-        }
 
-        function getTimeStr(microseconds) {
-            const h = ('00' + Math.floor(microseconds / 1000 / 60 / 60)).slice(-2);
-            const m = ('00' + Math.floor(microseconds / 1000 / 60 % 60)).slice(-2);
-            const s = ('00' + Math.floor(microseconds / 1000 % 60     )).slice(-2);
-
-            return h + ':' + m + ':' + s;
-        }
-
-        const elapsedTimeRecordEl = document.getElementById('elapsedTimeRecordEl');
-        const elapsedTimeRecordDisplay = () => {
-            const currentDate = new Date();
-            elapsedTimeRecord = Math.floor((currentDate - loadedDate) + parseInt(record.value.microseconds));
-            elapsedTimeRecordEl.innerHTML = getTimeStr(elapsedTimeRecord);
-            updateRecord();
-        }
+            const elapsedTimeRecordEl = document.getElementById('elapsedTimeRecordEl');
+            const elapsedTimeRecordDisplay = () => {
+                const currentDate = new Date();
+                elapsedTimeRecord = Math.floor((currentDate - loadedDate) + parseInt(record.value.microseconds));
+                elapsedTimeRecordEl.innerHTML = getTimeStr(elapsedTimeRecord);
+                updateRecord();
+            }
 
 
-        const elapsedTimeEnterEl = document.getElementById('elapsedTimeEnterEl');
-        const elapsedTimeEnterDisplay = () => {
-            let roomOld = JSON.parse(JSON.stringify(room));
-            const currentDate = new Date();
-            elapsedTimeEnter = Math.floor((currentDate - loadedDate) + parseInt(room.microseconds));
-            elapsedTimeEnterEl.innerHTML = getTimeStr(elapsedTimeEnter);
-            roomOld.microseconds = elapsedTimeEnter;
-            localStorage.setItem('room', JSON.stringify(roomOld))
-        }
+            const elapsedTimeEnterEl = document.getElementById('elapsedTimeEnterEl');
+            const elapsedTimeEnterDisplay = () => {
+                let roomOld = JSON.parse(JSON.stringify(room));
+                const currentDate = new Date();
+                elapsedTimeEnter = Math.floor((currentDate - loadedDate) + parseInt(room.microseconds));
+                elapsedTimeEnterEl.innerHTML = getTimeStr(elapsedTimeEnter);
+                roomOld.microseconds = elapsedTimeEnter;
+                localStorage.setItem('room', JSON.stringify(roomOld))
+            }
 
-        setInterval(elapsedTimeRecordDisplay, 100);
-        setInterval(elapsedTimeEnterDisplay, 100);
+            setInterval(elapsedTimeRecordDisplay, 100);
+            setInterval(elapsedTimeEnterDisplay, 100);
 
-        document.getElementById('leaveRoomBtn').addEventListener('click', () => {
-            const leaveRoomForm = document.getElementById('leaveRoomForm');
-            leaveRoomForm.records.value = localStorage.getItem('records');
-            document.cookie = 'submit_records=yes';
-            leaveRoomForm.submit();
-        });
+            document.getElementById('leaveRoomBtn').addEventListener('click', () => {
+                const leaveRoomForm = document.getElementById('leaveRoomForm');
+                leaveRoomForm.records.value = localStorage.getItem('records');
+                document.cookie = 'submit_records=yes';
+                leaveRoomForm.submit();
+            });
+        };
     </script>
 </body>
 
