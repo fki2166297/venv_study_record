@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'study.apps.StudyConfig',
-    'room.apps.RoomConfig',
     'qa.apps.QaConfig',
     'accounts.apps.AccountsConfig',
     'widget_tweaks',
